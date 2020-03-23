@@ -73,6 +73,10 @@ flags.DEFINE_float('weight_decay', 1e-4, 'Weight decay scale')
 flags.DEFINE_string('schedule', 'piecewise', 'Learning rate schedule')
 flags.DEFINE_float('momentum', 0.9, 'Momentum')
 flags.DEFINE_boolean('nesterov', False, 'Use Nesterov momentum')
+flags.DEFINE_boolean('use_tpu', False, 'Use TPU for fit')
+flags.DEFINE_string('tpu_name', None, 'Name of TPU to use')
+flags.DEFINE_string('tpu_zone', None, 'Zone of TPU to use')
+flags.DEFINE_string('tpu_project', None, 'Name of GCP project associated with TPU')
 flags.DEFINE_float('grad_norm_clip', 1., 'Clip the norm of gradients to this value')
 flags.DEFINE_integer('batch_size', 128, 'Mini-batch size for SGD')
 flags.DEFINE_string('features', 'syms+action_type+hour', 'Features')
@@ -402,12 +406,20 @@ def fit(config):
                                 'valid_tfrecord_path',
                                 'expt_dir'])
   total_num_steps = FLAGS.num_epochs * FLAGS.steps_per_epoch
+  use_tpu = FLAGS.use_tpu
   logging.info(f"Training for {total_num_steps} steps total")
   logdir = FLAGS.expt_dir
   checkpoint_file = "weights.{epoch:02d}.ckpt"
   checkpoint_path = get_ckpt_dir() + "/" + checkpoint_file
   checkpoint_dir = os.path.dirname(checkpoint_path)
   logging.info(f"Checkpoint directory: {checkpoint_dir}")
+
+  if use_tpu:
+    logging.info(f"Using TPU distribution strategy")
+    resolver = tf.distribute.cluster_resolver.TPUClusterResolver(tpu=FLAGS.tpu_name, zone=FLAGS.tpu_zone, project=FLAGS.tpu_project)
+    tf.config.experimental_connect_to_cluster(resolver)
+    tf.tpu.experimental.initialize_tpu_system(resolver)
+
   model = Model(config)
 
   if FLAGS.framework == 'fit':
