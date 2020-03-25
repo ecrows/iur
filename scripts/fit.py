@@ -461,16 +461,22 @@ def handle_flags(argv):
     logging.info(f'fit.py flags:\n{s}')
     if FLAGS.mode == 'fit':
       flagfile = get_flagfile()
-      with open(flagfile, 'w') as fh:
-        logging.info(f"Writing flags to {flagfile}")
-        fh.write(s)
+      logging.info(f"Writing flags to {flagfile}")
+      tf.io.write_file(flagfile, s)
+
+      # TODO: Verify this still works on GPU, then delete below
+      # with open(flagfile, 'w') as fh:
+      #  fh.write(s)
 
 
 def main(argv):
   # Set global environment flags
-  logging.info(f"Limiting to {FLAGS.num_cpu} CPU")
-  tf.config.threading.set_inter_op_parallelism_threads(FLAGS.num_cpu)
-  tf.config.threading.set_intra_op_parallelism_threads(FLAGS.num_cpu)
+  if FLAGS.num_cpu == -1: # Automatic tuning
+    logging.info("Automatically adjusting CPU thread count")
+  else:
+    logging.info(f"Limiting to {FLAGS.num_cpu} CPU")
+    tf.config.threading.set_inter_op_parallelism_threads(FLAGS.num_cpu)
+    tf.config.threading.set_intra_op_parallelism_threads(FLAGS.num_cpu)
 
   config = FeatureConfig.from_json(FLAGS.expt_config_path)
   logging.info(config)
@@ -496,8 +502,11 @@ def main(argv):
     logging.info(f"Results will be written to {results_file}")
     results = "\n".join([f"{k} {v}" for k, v in metrics.items()])
     logging.info(results)
-    with open(results_file, 'w') as fh:
-      fh.write(results)
+    tf.io.write_file(results_file, results)
+
+    # TODO: Verify the above still works on local GPU, then remove below
+    # with open(results_file, 'w') as fh:
+    # fh.write(results)
 
   if FLAGS.mode == 'embed':
     export_dir = get_export_dir()
