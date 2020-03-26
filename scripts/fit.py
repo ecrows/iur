@@ -57,6 +57,7 @@ flags.DEFINE_integer('save_freq', 50000, 'Number of steps between checkpoints')
 flags.DEFINE_string('train_tfrecord_path', None, 'Path to train TFRecords')
 flags.DEFINE_string('valid_tfrecord_path', None, 'Path to validation TFRecords')
 flags.DEFINE_string('monitor', 'MRR', 'Metric to monitor')
+flags.DEFINE_integer('prefetch', 1, 'Number of records to prefetch')
 flags.DEFINE_integer('num_cpu', 4, 'Number of CPU processes')
 flags.DEFINE_integer('num_classes', None, 'This is usually the number of authors')
 flags.DEFINE_integer('episode_len', 16, 'Episode length')
@@ -231,7 +232,7 @@ def build_dataset(file_pattern, config, num_epochs=None, shuffle=True,
       max_episode_length=FLAGS.episode_len,
       repeat=samples_per_class)
   ds = ds.batch(FLAGS.batch_size)
-  ds = ds.prefetch(1)
+  ds = ds.prefetch(FLAGS.prefetch)
   return ds
 
 

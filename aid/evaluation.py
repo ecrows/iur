@@ -28,7 +28,7 @@ def ranking(query_vectors, query_authors, target_vectors,
       target_vectors: Numpy matrix of size (M, V) for M authors and V features.
       target_authors: Numpy array of size (M) containing author IDs.
       metric: Metric used to compare different embeddings.
-      pairwise_distances: If `metric` is "precomputed"
+      distances: If `metric` is "precomputed"
       n_jobs: (Optional) Number of threads to use to compute pairwise distances.
 
     Returns:
